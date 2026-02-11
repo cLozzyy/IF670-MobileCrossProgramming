@@ -1,40 +1,96 @@
-import { Image, StyleSheet } from 'react-native';
+import React from 'react';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-
-export default function HomeScreen() {
+export default function App() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Nicholas Andre Natalino - 0000092117</ThemedText>
-      </ThemedView>
+      <Text style={styles.headerTitle}>Daftar Teman</Text>
 
-    </ParallaxScrollView>
+      <View style={styles.card}>
+        <Image 
+          source={require('@/assets/images/andre.png')}
+          style={styles.profileImage} 
+        />
+        <Text style={styles.name}>Nicholas Andre Natalino</Text>
+        <Text style={styles.nim}>0000092117</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Image 
+          source={require('@/assets/images/patrick.jpeg')}
+          style={styles.profileImage} 
+        />
+        <Text style={styles.name}>Dave William</Text>
+        <Text style={styles.nim}>0000093527</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Image 
+          source={require('@/assets/images/leo.png')} 
+          style={styles.profileImage} 
+        />
+        <Text style={styles.name}>Vinson Gautama</Text>
+        <Text style={styles.nim}>00000069696</Text>
+      </View>
+
+      
+      <View style={styles.card}>
+        <Image 
+          source={require('@/assets/images/leolagi.png')}
+          style={styles.profileImage} 
+        />
+        <Text style={styles.name}>Rifqi</Text>
+        <Text style={styles.nim}>00000021234</Text>
+      </View>
+
+      <View style={styles.card}>
+        <Image 
+          source={require('@/assets/images/neon.png')} 
+          style={styles.profileImage} 
+        />
+        <Text style={styles.name}>Yehuda</Text>
+        <Text style={styles.nim}>00000022111</Text>
+      </View>
+
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 20,
     alignItems: 'center',
-    padding: 16,
-    gap: 8,
+    backgroundColor: '#f5f5f5',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    marginTop: 10,
+    color: '#333',
+  },
+  card: {
+    width: '100%',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  nim: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
 });
