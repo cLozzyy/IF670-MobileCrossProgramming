@@ -1,40 +1,94 @@
-import { Image, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 
-export default function HomeScreen() {
+import Counter from '@/components/Counter';
+import Profile from '@/components/Profile';
+
+export default function App() {
+  
+  const [count, setCount] = useState(0);
+
+
+  const [inputText, setInputText] = useState('');
+
+  const [profileData, setProfileData] = useState({
+    name: 'Anonymous',
+    age: 0,
+  });
+
+  const handleIncrement = () => {
+    setCount(count + 1);
+  };
+
+  
+  const handleDecrement = () => {
+    if (count > 0) setCount(count - 1); 
+  };
+
+  
+  const handlePassValue = () => {
+    setProfileData({
+      name: inputText === '' ? 'Anonymous' : inputText, 
+      age: count,
+    });
+  };
+
+  
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Nicholas Andre Natalino - 0000092117</ThemedText>
-      </ThemedView>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Profile name={profileData.name} age={profileData.age} />
+      <Counter 
+        value={count}
+        onIncrement={handleIncrement}
+        onDecrement={handleDecrement}
+        onPassValue={handlePassValue}
+      />
 
-    </ParallaxScrollView>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Input your name here:</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Ketik namamu..."
+          value={inputText}
+          onChangeText={(text) => setInputText(text)}
+        />
+      </View>
+
+    </ScrollView>
   );
 }
 
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#fff',
     alignItems: 'center',
-    padding: 16,
-    gap: 8,
+    justifyContent: 'center',
+    padding: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  header: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#0a7ea4',
+  },
+  inputContainer: {
+    width: '100%',
+    marginTop: 20,
+  },
+  label: {
+    marginBottom: 5,
+    fontSize: 16,
+  },
+  input: {
+    height: 50,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    width: '100%',
   },
 });
