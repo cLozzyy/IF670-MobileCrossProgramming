@@ -1,40 +1,41 @@
-import { Image, StyleSheet } from 'react-native';
+import { Stack } from "expo-router";
+import { ScrollView } from "react-native";
+import { Avatar, Card } from "react-native-paper";
+import { styles } from "./AppStyles";
+import userData from "./data.json";
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Nicholas Andre Natalino - 0000092117</ThemedText>
-      </ThemedView>
-
-    </ParallaxScrollView>
-  );
+interface User {
+  name: string;
+  email: string;
+  photo_url: string;
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+interface ScreenOptions {
+  title: string;
+  headerStyle: { backgroundColor: string };
+  headerTintColor: string;
+}
+
+export default function App(): React.ReactElement {
+  return (
+    <>
+      <Stack.Screen options={{ title: "User List", headerStyle: { backgroundColor: '#607D8B' }, headerTintColor: '#FFFFFF' } as ScreenOptions} />
+
+      <ScrollView contentContainerStyle={styles.container}>
+        {(userData as User[]).map((user: User, index: number) => (
+          <Card style={styles.card} key={index} mode="elevated">
+            <Card.Title
+              title={user.name}
+              titleStyle={styles.titleText}
+              subtitle={user.email}
+              subtitleStyle={styles.subtitleText}
+              left={(props) => (
+                <Avatar.Image {...props} source={{ uri: user.photo_url }} />
+              )}
+            />
+          </Card>
+        ))}
+      </ScrollView>
+    </>
+  );
+}
