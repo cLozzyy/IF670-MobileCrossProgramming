@@ -1,7 +1,7 @@
 import { Link, Stack } from "expo-router";
 import { ScrollView } from "react-native";
 import { Avatar, Card } from "react-native-paper";
-import { styles } from "../AppStyles";
+import { styles } from "./AppStyles";
 const userData = require("./data.json");
 
 interface User {
