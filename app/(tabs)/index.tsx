@@ -1,40 +1,43 @@
-import { Image, StyleSheet } from 'react-native';
+import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { CustomTextInput, NIMInput } from "../input";
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+export default function Index() {
 
-export default function HomeScreen() {
+  const [name, setName] = useState("");
+  const [nim, setNim] = useState("");
+
+  const handleChangeMyName = (value: string) => {
+    setName(value);
+  };
+
+  const handleChangeMyNim = (value: string) => {
+    setNim(value);
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Nicholas Andre Natalino - 0000092117</ThemedText>
-      </ThemedView>
+    <View style={styles.container}>
+      <Text>{name} - {nim}</Text>
 
-    </ParallaxScrollView>
+      <CustomTextInput
+        input={name}
+        onChange={handleChangeMyName}
+      />
+
+      <NIMInput
+        input={nim}
+        onChange={handleChangeMyNim}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+  container: {
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
     gap: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
   },
 });
