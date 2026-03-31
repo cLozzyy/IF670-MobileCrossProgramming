@@ -1,42 +1,70 @@
-import { Link, Stack } from "expo-router";
-import { ScrollView } from "react-native";
-import { Avatar, Card } from "react-native-paper";
-import { styles } from "./AppStyles";
-const userData = require("./data.json");
+import { Link } from "expo-router";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Avatar, Card, Text } from "react-native-paper";
 
-interface User {
-  name: string;
-  email: string;
-  photo_url: string;
-}
+// 1. IMPORT LIBRARY ANIMASI DI SINI
+import Animated, { FadeInDown } from "react-native-reanimated";
+
+// Pastikan lokasi import data.json kamu sudah benar
+const userData = require("./data.json"); 
 
 export default function UserList() {
   return (
-    <>
-      <Stack.Screen options={{ title: "User List" }} />
+    <ScrollView contentContainerStyle={styles.container}>
+      {userData.map((user: any, index: number) => (
+        <Animated.View 
+          key={index} 
+          entering={FadeInDown.delay(index * 200).springify()}
+        >
+          <Card style={styles.card}>
+            <Link
+              href={{
+                pathname: "/profile",
+                params: { userName: user.name },
+              }}
+              push
+              asChild
+            >
+              <TouchableOpacity>
+                <Card.Content style={styles.cardContent}>
+                  <Avatar.Image
+                    size={70}
+                    source={{ uri: user.photo_url }}
+                  />
+                  <View style={styles.textContainer}>
+                    <Text variant="titleMedium" style={{ fontWeight: 'bold' }}>
+                      {user.name}
+                    </Text>
+                    <Text variant="bodyMedium" style={{ color: 'gray' }}>
+                      {user.email}
+                    </Text>
+                  </View>
+                </Card.Content>
+              </TouchableOpacity>
+            </Link>
+          </Card>
+        </Animated.View>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        {(userData as User[]).map((user: User, index: number) => (
-          <Link
-            key={index}
-            href={{
-              pathname: "/profile",
-              params: { userName: user.name }
-            }}
-            asChild
-          >
-            <Card style={styles.card}>
-              <Card.Title
-                title={user.name}
-                subtitle={user.email}
-                left={(props) => (
-                  <Avatar.Image {...props} source={{ uri: user.photo_url }} />
-                )}
-              />
-            </Card>
-          </Link>
-        ))}
-      </ScrollView>
-    </>
+      ))}
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    backgroundColor: "#f1f5f9",
+    flexGrow: 1,
+  },
+  card: {
+    marginBottom: 12,
+    backgroundColor: "white",
+  },
+  cardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  textContainer: {
+    marginLeft: 16,
+  },
+});

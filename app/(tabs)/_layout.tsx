@@ -1,10 +1,20 @@
-import { Stack } from "expo-router";
-import { PaperProvider } from "react-native-paper";
+import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
-export default function RootLayout() {
+export default function TabLayout() {
   return (
-    <PaperProvider>
-      <Stack />
-    </PaperProvider>
+    <Tabs screenOptions={{ 
+        tabBarActiveTintColor: "#3b82f6", 
+        headerStyle: { backgroundColor: '#f8fafc' },
+    }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} />,
+        }}
+      />
+      {/* Nanti kita tambah layar Report dan Notif di sini */}
+    </Tabs>
   );
 }
