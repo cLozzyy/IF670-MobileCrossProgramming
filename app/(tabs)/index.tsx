@@ -1,97 +1,98 @@
-import { Camera } from "expo-camera";
-import * as FileSystem from "expo-file-system";
-import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
-import { useState } from "react";
-import { Alert, Button, Image, StyleSheet, Text, View } from "react-native";
+import * as Location from "expo-location";
+import React, { useState } from "react";
+import { Button, Dimensions, StyleSheet, Text, View } from "react-native";
+import MapView, { Marker, Region, UrlTile } from "react-native-maps";
+
+type Coordinates = {
+  latitude: number;
+  longitude: number;
+};
+
+const { height } = Dimensions.get("window");
 
 export default function Index() {
-  const [image, setImage] = useState<string | null>(null);
+  const [location, setLocation] = useState<Coordinates | null>(null);
 
-  const openCamera = async () => {
-    const permission = await Camera.requestCameraPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission Denied", "Camera permission is required!");
+  const getLocation = async (): Promise<void> => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    
+    if (status !== "granted") {
+      alert("Permission denied! Please allow location access.");
       return;
     }
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
+    const loc = await Location.getCurrentPositionAsync({});
+    setLocation({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
     });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
   };
 
-  const openGallery = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission Denied", "Gallery permission is required!");
-      return;
-    }
+  const handleMapPress = (e: any) => {
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 1,
+    setLocation({
+      latitude: e.nativeEvent.coordinate.latitude,
+      longitude: e.nativeEvent.coordinate.longitude,
     });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
-    }
   };
 
-  const saveImage = async () => {
-    if (!image) {
-      Alert.alert("Error", "Pilih atau ambil gambar terlebih dahulu!");
-      return;
-    }
 
-    try {
-      const permission = await MediaLibrary.requestPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert("Izin Ditolak", "Dibutuhkan izin untuk menyimpan foto ke galeri.");
-        return;
+  const handleMarkerDragEnd = (e: any) => {
+    setLocation({
+      latitude: e.nativeEvent.coordinate.latitude,
+      longitude: e.nativeEvent.coordinate.longitude,
+    });
+  };
+
+
+  const region: Region | undefined = location
+    ? {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
       }
-
-      const filename = image.split('/').pop() || 'my_saved_image.jpg';
-      const destinationPath = FileSystem.documentDirectory + filename;
-
-      await FileSystem.copyAsync({
-        from: image,
-        to: destinationPath,
-      });
-
-      await MediaLibrary.saveToLibraryAsync(destinationPath);
-      
-      Alert.alert("Berhasil!", "Gambar telah sukses disimpan ke galeri kamu.");
-    } catch (error) {
-      console.log(error);
-      Alert.alert("Gagal", "Terjadi kesalahan saat menyimpan gambar.");
-    }
-  };
+    : undefined;
 
   return (
     <View style={styles.container}>
-      {/* Jangan lupa sesuaikan NIM */}
-      <Text style={styles.text}>
-        Nicholas Andre Natalino - [Isi NIM Di Sini]
-      </Text>
-
-      <View style={styles.button}>
-        <Button title="OPEN CAMERA" onPress={openCamera} />
+      <View style={styles.header}>
+         <Text style={styles.studentInfo}>Nicholas Andre Natalino - 92117</Text>
       </View>
       
-      <View style={styles.button}>
-        <Button title="OPEN GALLERY" onPress={openGallery} />
-      </View>
-
-      {image && (
+      {!location ? (
+        <View style={styles.center}>
+            <Button title="Get Geo Location" onPress={getLocation} />
+        </View>
+      ) : (
         <>
-          <Image source={{ uri: image }} style={styles.image} />
-          <View style={styles.button}>
-            <Button title="SAVE IMAGE" onPress={saveImage} color="#28a745" />
+          
+          <MapView 
+            style={styles.map} 
+            initialRegion={region}
+            onPress={handleMapPress}
+          >
+            <UrlTile 
+              urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png" 
+              maximumZ={19} 
+            />
+            
+            <Marker 
+              coordinate={location} 
+              title="My Location" 
+              draggable 
+              onDragEnd={handleMarkerDragEnd} 
+            />
+          </MapView>
+          
+          <View style={styles.info}>
+            
+            <Text style={styles.infoText}>Latitude: {location.latitude.toFixed(6)}</Text>
+            <Text style={styles.infoText}>Longitude: {location.longitude.toFixed(6)}</Text>
+            
+            <View style={{ marginTop: 20 }}>
+               <Button title="Reset to Current Location" onPress={getLocation} />
+            </View>
           </View>
         </>
       )}
@@ -102,25 +103,42 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  header: {
+      paddingTop: 50,
+      paddingBottom: 20,
+      alignItems: 'center',
+      backgroundColor: '#f8f9fa',
+      borderBottomWidth: 1,
+      borderColor: '#e9ecef'
+  },
+  studentInfo: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#343a40'
+  },
+  center: {
+    flex: 1,
     justifyContent: "center",
-    backgroundColor: "#fff"
+    alignItems: "center",
   },
-  text: {
-    marginBottom: 20,
-    fontSize: 16,
-    fontWeight: "bold"
+  map: {
+    height: height * 0.6,
+    width: "100%",
   },
-  button: {
-    marginVertical: 5,
-    width: 200,
+  info: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center"
   },
-  image: {
-    width: 300,
-    height: 300,
-    marginTop: 20,
-    marginBottom: 20,
-    borderRadius: 10,
-    resizeMode: "cover"
-  },
+  infoText: {
+      fontSize: 18,
+      marginBottom: 10,
+      fontWeight: '500',
+      color: '#495057'
+  }
 });
+```</Marker></Marker></Marker></MapView></Marker></MapView>
