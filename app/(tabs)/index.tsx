@@ -1,100 +1,141 @@
-import * as Location from "expo-location";
 import React, { useState } from "react";
-import { Button, Dimensions, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker, Region, UrlTile } from "react-native-maps";
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-type Coordinates = {
-  latitude: number;
-  longitude: number;
-};
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
 
-const { height } = Dimensions.get("window");
+import { supabase } from "../lib/supabase";
 
 export default function Index() {
-  const [location, setLocation] = useState<Coordinates | null>(null);
+  const [image, setImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const getLocation = async (): Promise<void> => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    
-    if (status !== "granted") {
-      alert("Permission denied! Please allow location access.");
-      return;
-    }
+  const takePhoto = async () => {
+    try {
+      // permission camera
+      const cameraPermission =
+        await ImagePicker.requestCameraPermissionsAsync();
 
-    const loc = await Location.getCurrentPositionAsync({});
-    setLocation({
-      latitude: loc.coords.latitude,
-      longitude: loc.coords.longitude,
-    });
-  };
-
-  const handleMapPress = (e: any) => {
-
-    setLocation({
-      latitude: e.nativeEvent.coordinate.latitude,
-      longitude: e.nativeEvent.coordinate.longitude,
-    });
-  };
-
-
-  const handleMarkerDragEnd = (e: any) => {
-    setLocation({
-      latitude: e.nativeEvent.coordinate.latitude,
-      longitude: e.nativeEvent.coordinate.longitude,
-    });
-  };
-
-
-  const region: Region | undefined = location
-    ? {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
+      if (!cameraPermission.granted) {
+        Alert.alert("Camera permission denied");
+        return;
       }
-    : undefined;
+
+      // open camera
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (result.canceled) return;
+
+      const imageUri = result.assets[0].uri;
+
+      setImage(imageUri);
+
+      await uploadPhoto(imageUri);
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Error", "Failed to take photo");
+    }
+  };
+
+  const uploadPhoto = async (uri: string) => {
+    try {
+      setLoading(true);
+
+      // permission location
+      const locationPermission =
+        await Location.requestForegroundPermissionsAsync();
+
+      if (!locationPermission.granted) {
+        Alert.alert("Location permission denied");
+        return;
+      }
+
+      // get location
+      const location = await Location.getCurrentPositionAsync({});
+
+      const latitude = location.coords.latitude;
+      const longitude = location.coords.longitude;
+
+      // convert image to blob
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      // filename
+      const fileName = `photo-${Date.now()}.jpg`;
+
+      // upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from("photos")
+        .upload(fileName, blob, {
+          contentType: "image/jpeg",
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // get public url
+      const { data } = supabase.storage
+        .from("photos")
+        .getPublicUrl(fileName);
+
+      const imageUrl = data.publicUrl;
+
+      // insert database
+      const { error: insertError } = await supabase
+        .from("photos")
+        .insert([
+          {
+            image_url: imageUrl,
+            latitude,
+            longitude,
+          },
+        ]);
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      Alert.alert("Success", "Photo uploaded successfully");
+    } catch (error: any) {
+      console.log(error);
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-         <Text style={styles.studentInfo}>Nicholas Andre Natalino - 92117</Text>
-      </View>
-      
-      {!location ? (
-        <View style={styles.center}>
-            <Button title="Get Geo Location" onPress={getLocation} />
-        </View>
-      ) : (
-        <>
-          
-          <MapView 
-            style={styles.map} 
-            initialRegion={region}
-            onPress={handleMapPress}
-          >
-            <UrlTile 
-              urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png" 
-              maximumZ={19} 
-            />
-            
-            <Marker 
-              coordinate={location} 
-              title="My Location" 
-              draggable 
-              onDragEnd={handleMarkerDragEnd} 
-            />
-          </MapView>
-          
-          <View style={styles.info}>
-            
-            <Text style={styles.infoText}>Latitude: {location.latitude.toFixed(6)}</Text>
-            <Text style={styles.infoText}>Longitude: {location.longitude.toFixed(6)}</Text>
-            
-            <View style={{ marginTop: 20 }}>
-               <Button title="Reset to Current Location" onPress={getLocation} />
-            </View>
-          </View>
-        </>
+      <Text style={styles.title}>
+        Week 11 Supabase Integration
+      </Text>
+
+      <Button title="Take Photo" onPress={takePhoto} />
+
+      {loading && (
+        <ActivityIndicator
+          size="large"
+          style={{ marginTop: 20 }}
+        />
+      )}
+
+      {image && (
+        <Image
+          source={{ uri: image }}
+          style={styles.image}
+        />
       )}
     </View>
   );
@@ -103,42 +144,21 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-  },
-  header: {
-      paddingTop: 50,
-      paddingBottom: 20,
-      alignItems: 'center',
-      backgroundColor: '#f8f9fa',
-      borderBottomWidth: 1,
-      borderColor: '#e9ecef'
-  },
-  studentInfo: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: '#343a40'
-  },
-  center: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  map: {
-    height: height * 0.6,
-    width: "100%",
-  },
-  info: {
-    flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center"
   },
-  infoText: {
-      fontSize: 18,
-      marginBottom: 10,
-      fontWeight: '500',
-      color: '#495057'
-  }
-});
-```</Marker></Marker></Marker></MapView></Marker></MapView>
+
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+
+  image: {
+    width: 300,
+    height: 300,
+    marginTop: 20,
+    borderRadius: 10,
+  },
+});git add .
